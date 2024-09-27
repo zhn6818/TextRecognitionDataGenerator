@@ -6,6 +6,7 @@ from torchvision import datasets, transforms, models
 import os
 from PIL import Image
 from datetime import datetime
+from torch.optim.lr_scheduler import StepLR
 
 # 自定义数据集类
 class CustomImageFolder(datasets.ImageFolder):
@@ -53,7 +54,6 @@ transform = transforms.Compose([
 
 train_dataset = CustomImageFolder(root=extract_path, transform=transform)
 
-# 设置 num_workers 为 32
 num_workers = 32
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
@@ -61,11 +61,6 @@ class_names = train_dataset.classes
 print(f"Classes: {class_names}")
 
 model = models.resnet50(pretrained=True)
-
-# for param in model.layer1.parameters():
-#     param.requires_grad = False
-# for param in model.layer2.parameters():
-#     param.requires_grad = False
 
 num_classes = len(class_names)
 model.fc = nn.Linear(model.fc.in_features, num_classes)
@@ -77,6 +72,9 @@ if torch.cuda.device_count() > 1:
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
+
+# 学习率调度器
+scheduler = StepLR(optimizer, step_size=5, gamma=0.1)  # 每5个epoch减少学习率
 
 # 创建保存模型的文件夹
 weights_dir = "FontClassify/weights/"
@@ -116,6 +114,7 @@ num_epochs = 0  # 初始化 epoch 计数
 while True:  # 无限循环，直到达到目标损失
     num_epochs += 1  # 递增 epoch 计数
     best_loss = train(model, device, train_loader, optimizer, criterion, num_epochs - 1, best_loss)
+    scheduler.step()  # 调整学习率
     
     # 检查当前损失是否低于目标损失
     if best_loss < target_loss:
