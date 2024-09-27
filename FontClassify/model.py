@@ -33,7 +33,7 @@ class CustomImageFolder(datasets.ImageFolder):
             new_height = max_size
             new_width = int((width / height) * max_size)
 
-        img = img.resize((new_width, new_height), Image.ANTIALIAS)
+        img = img.resize((new_width, new_height), Image.LANCZOS)
         new_img = Image.new("RGB", (64, 64), (0, 0, 0))
         x_offset = (64 - new_width) // 2
         y_offset = (64 - new_height) // 2
@@ -52,17 +52,20 @@ transform = transforms.Compose([
 ])
 
 train_dataset = CustomImageFolder(root=extract_path, transform=transform)
-train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+
+# 设置 num_workers 为 32
+num_workers = 32
+train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=num_workers)
 
 class_names = train_dataset.classes
 print(f"Classes: {class_names}")
 
 model = models.resnet50(pretrained=True)
 
-for param in model.layer1.parameters():
-    param.requires_grad = False
-for param in model.layer2.parameters():
-    param.requires_grad = False
+# for param in model.layer1.parameters():
+#     param.requires_grad = False
+# for param in model.layer2.parameters():
+#     param.requires_grad = False
 
 num_classes = len(class_names)
 model.fc = nn.Linear(model.fc.in_features, num_classes)
@@ -74,6 +77,10 @@ if torch.cuda.device_count() > 1:
 
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=0.001)
+
+# 创建保存模型的文件夹
+weights_dir = "FontClassify/weights/"
+os.makedirs(weights_dir, exist_ok=True)
 
 def train(model, device, train_loader, optimizer, criterion, epoch, best_loss):
     model.train()
@@ -95,17 +102,22 @@ def train(model, device, train_loader, optimizer, criterion, epoch, best_loss):
 
     if avg_loss < best_loss:
         best_loss = avg_loss
-        # 获取当前时间并格式化
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-        # 保存模型时包含时间、epoch 和 loss
-        model_filename = f'model_epoch{epoch + 1}_loss{avg_loss:.4f}_{timestamp}.pth'
+        model_filename = os.path.join(weights_dir, f'model_epoch{epoch + 1}_loss{avg_loss:.4f}_{timestamp}.pth')
         torch.save(model.state_dict(), model_filename)
         print(f'保存新的最佳模型: {model_filename}, 损失: {best_loss:.4f}')
 
     return best_loss
 
 best_loss = float('inf')
+target_loss = 0.005  # 目标损失
+num_epochs = 0  # 初始化 epoch 计数
 
-num_epochs = 10
-for epoch in range(num_epochs):
-    best_loss = train(model, device, train_loader, optimizer, criterion, epoch, best_loss)
+while True:  # 无限循环，直到达到目标损失
+    num_epochs += 1  # 递增 epoch 计数
+    best_loss = train(model, device, train_loader, optimizer, criterion, num_epochs - 1, best_loss)
+    
+    # 检查当前损失是否低于目标损失
+    if best_loss < target_loss:
+        print(f'训练完成，达到目标损失 {target_loss}，在 {num_epochs} 轮后停止训练。')
+        break
