@@ -2,9 +2,31 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision import models, transforms
+import os
 import sys
 sys.path.append("/data1/zhn/macdata/code/github/python/TextRecognitionDataGenerator")
 from custom_dataset import CustomImageFolder  # 假设自定义数据集类在custom_dataset.py中
+
+def load_model_without_dataparallel(model, checkpoint_path):
+    # 加载模型的 state_dict
+    state_dict = torch.load(checkpoint_path)
+
+    # 如果保存的模型是 DataParallel 模型，去掉 'module.' 前缀
+    new_state_dict = {}
+    for key, value in state_dict.items():
+        if key.startswith('module.'):
+            new_key = key[len('module.'):]  # 去掉 'module.' 前缀
+        else:
+            new_key = key
+        new_state_dict[new_key] = value
+
+    # 加载新的 state_dict
+    model.load_state_dict(new_state_dict)
+
+    return model
+
+
+
 
 def evaluate_model(model, device, data_loader, class_names):
     model.eval()  # 设置模型为评估模式
@@ -44,21 +66,25 @@ def main():
     transform = transforms.Compose([
         transforms.Resize((image_size, image_size)),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
+        # transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5]),
     ])
 
     # 加载测试数据集
     test_dataset = CustomImageFolder(root=extract_path, transform=transform)
     test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
-    class_names = test_dataset.classes
-    print(f"Classes: {class_names}")
+    num_classes = test_dataset.get_num_classes()
+    class_names = test_dataset.get_class_names()
 
     # 加载模型
     model = models.resnet50(pretrained=True)
-    num_classes = len(class_names)
     model.fc = nn.Linear(model.fc.in_features, num_classes)
-    model.load_state_dict(torch.load('FontClassify/weights/model_epoch3_loss0.5663_20240927-170937.pth'))  # 替换为你的模型路径
+    checkpoint_path = 'FontClassify/weights/best_model_acc0.9927_20240930-095649.pth'
+    if os.path.exists(checkpoint_path):
+        model = load_model_without_dataparallel(model, checkpoint_path)
+        print(f"成功加载之前的模型: {checkpoint_path}")
+    else:
+        print("找不到之前的模型，使用预训练模型进行训练")
     model.to(device)
 
     # 评估模型
