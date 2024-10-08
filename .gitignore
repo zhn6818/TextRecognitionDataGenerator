@@ -100,7 +100,7 @@ ENV/
 # mypy
 .mypy_cache/
 
-.vscode/*
+
 /out
 trdg/dicts/._cn-3000.txt
 /FontClassify/weights

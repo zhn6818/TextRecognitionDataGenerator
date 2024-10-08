@@ -32,32 +32,45 @@ def evaluate_model(model, device, data_loader, class_names):
     model.eval()  # 设置模型为评估模式
     total_correct = {class_name: 0 for class_name in class_names}
     total_samples = {class_name: 0 for class_name in class_names}
+    
+    # 存储分类不正确的文件路径
+    incorrect_files = {class_name: [] for class_name in class_names}
 
     with torch.no_grad():
-        for data, target in data_loader:
+        for data, target, paths in data_loader:  # 从DataLoader中获取图像数据，标签和文件路径
             data, target = data.to(device), target.to(device)
             output = model(data)
             _, predicted = torch.max(output, 1)
 
-            # 统计正确的预测
+            # 统计正确的预测并记录错误分类的文件
             for i in range(len(target)):
                 true_class = class_names[target[i].item()]
-                if predicted[i].item() == target[i].item():
+                predicted_class = class_names[predicted[i].item()]
+                if predicted_class != true_class:
+                    # 如果分类错误，记录文件路径到对应的真实类别中
+                    incorrect_files[true_class].append(paths[i])
+                else:
                     total_correct[true_class] += 1
                 total_samples[true_class] += 1
 
-    # 计算准确率并输出结果
+    # 计算并打印每个类别的准确率
     accuracies = {}
     for class_name in class_names:
         accuracy = total_correct[class_name] / total_samples[class_name] if total_samples[class_name] > 0 else 0
         accuracies[class_name] = accuracy
         print(f'Class: {class_name}, Accuracy: {accuracy:.2f}')
+    
+    # 打印分类错误的文件路径
+    for class_name, files in incorrect_files.items():
+        print(f'Class: {class_name}, Incorrectly classified files:')
+        for file in files:
+            print(f'    {file}')
 
-    return accuracies
+    return accuracies, incorrect_files
 
 def main():
     # 设置参数
-    extract_path = "./eval/"
+    extract_path = "./outTrainSingle/"
     image_size = 64
     batch_size = 32
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

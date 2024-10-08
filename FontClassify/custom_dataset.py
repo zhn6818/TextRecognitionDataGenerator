@@ -53,7 +53,7 @@ class CustomImageFolder(Dataset):
         if self.transform is not None:
             img = self.transform(img)
 
-        return img, target
+        return img, target, img_path
 
     def pad_and_resize(self, img):
         max_size = 64

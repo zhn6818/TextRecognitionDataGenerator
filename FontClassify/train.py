@@ -16,7 +16,7 @@ def train(model, device, train_loader, optimizer, criterion, epoch):
     running_loss = 0.0
     correct = 0
     total = 0
-    for batch_idx, (data, target) in enumerate(train_loader):
+    for batch_idx, (data, target, *_) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)

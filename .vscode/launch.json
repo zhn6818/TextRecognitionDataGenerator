@@ -1,0 +1,87 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python run",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "trdg/run.py",
+            "args": [
+                "-w",
+                "11",
+                "-f",
+                "32",
+                "-c",
+                "5"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python chinese",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "trdg/run.py",
+            "args": [
+                "-l",
+                "cn",
+                "-w",
+                "5",
+                "-c",
+                "10",
+                "-r",
+                "-dt",
+                "./trdg/dicts/cs.txt"
+                // "-sw",
+                // "0.1"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python chinese different font",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "trdg/run_font.py",
+            "args": [
+                "-l",
+                "cn",
+                "-w",
+                "1",
+                "-c",
+                "5000",
+                "-r",
+                "-dt",
+                "./trdg/dicts/cn-3000.txt",
+                "-fd",
+                "./trdg/fonts/owncn",
+                "-t",
+                "10"
+                // "-sw",
+                // "0.1"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python train",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "FontClassify/train.py",
+            "args": [
+                
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python eval",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "FontClassify/evaluate.py",
+            "args": [],
+            "console": "integratedTerminal"
+        }
+    ]
+}
+
+//FontClassify/weights/model_epoch3_loss0.5663_20240927-170937.pth
