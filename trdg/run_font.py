@@ -38,7 +38,7 @@ def parse_arguments():
         description="Generate synthetic text data for text recognition."
     )
     parser.add_argument(
-        "--output_dir", type=str, nargs="?", help="The output directory", default="outEval/"
+        "--output_dir", type=str, nargs="?", help="The output directory", default="outTrainSingle/"
     )
     parser.add_argument(
         "-i",

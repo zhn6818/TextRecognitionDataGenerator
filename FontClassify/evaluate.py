@@ -57,7 +57,7 @@ def evaluate_model(model, device, data_loader, class_names):
 
 def main():
     # 设置参数
-    extract_path = "./out/"
+    extract_path = "./eval/"
     image_size = 64
     batch_size = 32
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
