@@ -80,6 +80,14 @@
             "program": "FontClassify/evaluate.py",
             "args": [],
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Python predict one",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "FontClassify/predictsingle.py",
+            "args": [],
+            "console": "integratedTerminal"
         }
     ]
 }
